@@ -1,0 +1,190 @@
+{
+  "users": [
+    {
+      "id": "u-1",
+      "email": "admin@criarte.com",
+      "password": "123456",
+      "name": "Admin Criarte"
+    }
+  ],
+  "clients": [
+    {
+      "id": "c-nhwvhymb",
+      "fullName": "Vitor de Souza Rodrigues",
+      "phone": "19018215903410",
+      "email": "victordsouzajr99@gmail.com",
+      "eventDate": "2026-03-31",
+      "eventType": "1",
+      "notes": "Briefing: Somente nas cores preta e amarelo",
+      "source": "WhatsApp",
+      "createdAt": "2026-03-23T01:09:11.277Z"
+    },
+    {
+      "id": "c-1",
+      "fullName": "Carla Mendes",
+      "phone": "11999998888",
+      "email": "carla@email.com",
+      "eventDate": "2026-03-22",
+      "eventType": "Aniversario",
+      "notes": "Cliente recorrente",
+      "source": "Manual",
+      "createdAt": "2026-03-22T00:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "o-qivnayh4",
+      "clientId": "c-nhwvhymb",
+      "serviceType": "Logotipo",
+      "serviceValue": 0,
+      "paymentMethod": "A definir",
+      "paymentStatus": "Pendente",
+      "orderStatus": "Novo lead",
+      "startDate": "2026-03-23",
+      "dueDate": "2026-03-31",
+      "finalFileName": "",
+      "finalFileData": "",
+      "briefing": "Objetivo: 1\nPrazo/evento: 2026-03-31\nDetalhes: Somente nas cores preta e amarelo",
+      "source": "WhatsApp",
+      "contactPhone": "19018215903410",
+      "conversationId": "conv-qikhugyk",
+      "createdAt": "2026-03-23T01:09:11.277Z",
+      "updatedAt": "2026-03-23T01:09:11.277Z"
+    },
+    {
+      "id": "o-1",
+      "clientId": "c-1",
+      "serviceType": "Convite digital",
+      "serviceValue": 350,
+      "paymentMethod": "PIX",
+      "paymentStatus": "50% pago",
+      "orderStatus": "Em criacao",
+      "startDate": "2026-03-22",
+      "dueDate": "2026-03-25",
+      "finalFileName": "",
+      "finalFileData": "",
+      "briefing": "Convite digital para aniversario infantil.",
+      "source": "Manual",
+      "contactPhone": "11999998888",
+      "conversationId": "",
+      "createdAt": "2026-03-22T00:00:00.000Z",
+      "updatedAt": "2026-03-22T00:00:00.000Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-qikhugyk",
+      "phone": "18215903410",
+      "stage": "novo_pedido",
+      "status": "aguardando_contato",
+      "displayName": "Vitor de Souza Rodrigues",
+      "orderId": "o-qivnayh4",
+      "clientId": "c-nhwvhymb",
+      "needsHuman": true,
+      "updatedAt": "2026-03-23T01:09:12.687Z",
+      "summary": "Objetivo: 1\nPrazo/evento: 2026-03-31\nDetalhes: Somente nas cores preta e amarelo",
+      "messages": [
+        {
+          "direction": "user",
+          "text": "Olá",
+          "timestamp": "2026-03-23T01:07:16.215Z"
+        },
+        {
+          "direction": "bot",
+          "text": "✨ Ola! Eu sou o assistente virtual da *Criarte*.\n\n🎨 Criamos artes personalizadas e convites digitais para deixar sua ideia linda, profissional e pronta para encantar.\n\nEscolha uma opcao:\n1. 💌 Quero pedir um orcamento\n2. 🎨 Ver servicos\n3. 📦 Acompanhar meu pedido\n4. 👩‍💼 Falar com atendente",
+          "timestamp": "2026-03-23T01:07:17.617Z"
+        },
+        {
+          "direction": "user",
+          "text": "1",
+          "timestamp": "2026-03-23T01:07:26.465Z"
+        },
+        {
+          "direction": "bot",
+          "text": "💌 Perfeito! Vamos abrir seu briefing na *Criarte*.\n\nPara comecar, me diga seu *nome completo*.",
+          "timestamp": "2026-03-23T01:07:27.907Z"
+        },
+        {
+          "direction": "user",
+          "text": "Vitor de Souza Rodrigues",
+          "timestamp": "2026-03-23T01:07:35.518Z"
+        },
+        {
+          "direction": "bot",
+          "text": "🎨 Qual servico voce quer pedir?\n\n1. 💌 Convite digital\n2. 📱 Arte para Instagram\n3. ✨ Arte personalizada\n4. 🧠 Logotipo\n5. 🏷️ Identidade visual\n\nSe preferir, pode responder com seu proprio texto.",
+          "timestamp": "2026-03-23T01:07:36.903Z"
+        },
+        {
+          "direction": "user",
+          "text": "4",
+          "timestamp": "2026-03-23T01:07:44.114Z"
+        },
+        {
+          "direction": "bot",
+          "text": "🎯 Perfeito! Agora me conte o tipo de evento ou objetivo dessa arte.",
+          "timestamp": "2026-03-23T01:07:45.499Z"
+        },
+        {
+          "direction": "user",
+          "text": "Logo para uma empresa de programação",
+          "timestamp": "2026-03-23T01:07:58.349Z"
+        },
+        {
+          "direction": "bot",
+          "text": "🎨 *Servicos da Criarte*\n\n💌 Convite digital - a partir de R$ 89,00\n📱 Arte para Instagram - a partir de R$ 35,00\n✨ Arte personalizada - a partir de R$ 120,00\n🧠 Logotipo - a partir de R$ 180,00\n🏷️ Identidade visual - a partir de R$ 420,00\n\n💬 Todas as artes sao feitas de forma personalizada, com foco em beleza, organizacao visual e impacto.\n\nSe quiser, eu posso abrir seu orcamento agora. Responda *orcamento* ou digite *1*.",
+          "timestamp": "2026-03-23T01:07:59.746Z"
+        },
+        {
+          "direction": "user",
+          "text": "1",
+          "timestamp": "2026-03-23T01:08:14.988Z"
+        },
+        {
+          "direction": "bot",
+          "text": "📅 Qual a data do evento ou o prazo ideal de entrega?\n\nVoce pode responder no formato DD/MM/AAAA ou digitar *a definir*.",
+          "timestamp": "2026-03-23T01:08:16.374Z"
+        },
+        {
+          "direction": "user",
+          "text": "31/03/2026",
+          "timestamp": "2026-03-23T01:08:32.277Z"
+        },
+        {
+          "direction": "bot",
+          "text": "📝 Agora me envie um briefing rapido.\n\nExemplo: tema, cores, texto principal, publico, referencias e qualquer detalhe importante.",
+          "timestamp": "2026-03-23T01:08:33.663Z"
+        },
+        {
+          "direction": "user",
+          "text": "Somente nas cores preta e amarelo",
+          "timestamp": "2026-03-23T01:08:52.243Z"
+        },
+        {
+          "direction": "bot",
+          "text": "📩 Se quiser, me passe um e-mail para contato. Se preferir pular, digite *pular*.",
+          "timestamp": "2026-03-23T01:08:53.627Z"
+        },
+        {
+          "direction": "user",
+          "text": "victordsouzajr99@gmail.com",
+          "timestamp": "2026-03-23T01:08:59.677Z"
+        },
+        {
+          "direction": "bot",
+          "text": "✨ Vou registrar seu atendimento com estes dados:\n👤 Nome: Vitor de Souza Rodrigues\n🎨 Servico: Logotipo\n🎯 Objetivo/evento: 1\n📅 Prazo/data: 2026-03-31\n📝 Briefing: Somente nas cores preta e amarelo\n📩 E-mail: victordsouzajr99@gmail.com\n\nResponda com *1* para confirmar ou *2* para cancelar.",
+          "timestamp": "2026-03-23T01:09:01.639Z"
+        },
+        {
+          "direction": "user",
+          "text": "1",
+          "timestamp": "2026-03-23T01:09:11.275Z"
+        },
+        {
+          "direction": "bot",
+          "text": "🎉 Pronto! Seu atendimento foi registrado com sucesso na *Criarte*.\n\n🧾 Numero do pedido: o-qivnayh4\n👤 Cliente: Vitor de Souza Rodrigues\n🎨 Servico: Logotipo\n📍 Status inicial: Novo lead\n\n💬 Nossa equipe pode continuar por este mesmo WhatsApp.",
+          "timestamp": "2026-03-23T01:09:12.687Z"
+        }
+      ]
+    }
+  ]
+}
