@@ -517,11 +517,11 @@ const renderBotSummary = () => `
     <strong>${escapeHtml(state.botStatus.statusLabel || "Indisponivel")}</strong>
   </div>
   <p class="helper">
-    ${state.storageMode === "server" ? "O painel esta ligado a mesma base do chatbot." : "Abra via servidor para integrar com o bot do WhatsApp."}
+    ${state.storageMode === "server" ? "O painel esta ligado a mesma base do agente de IA." : "Abra via servidor para integrar com o agente de IA no WhatsApp."}
   </p>
   <div class="row">
     <button class="btn secondary small" data-action="open-qr" type="button">Abrir QR</button>
-    <button class="btn secondary small" data-action="goto-bot" type="button">Ver chatbot</button>
+    <button class="btn secondary small" data-action="goto-bot" type="button">Ver agente de IA</button>
   </div>
 `
 
@@ -539,7 +539,7 @@ const renderBotQrPanel = () => {
     return `
       <div class="qr-panel-empty success">
         <strong>WhatsApp conectado</strong>
-        <p class="helper">O bot da Criarte ja esta autenticado e pronto para atender.</p>
+        <p class="helper">O agente de IA da Criarte ja esta autenticado e pronto para atender.</p>
       </div>
     `
   }
@@ -551,7 +551,7 @@ const renderBotQrPanel = () => {
         <a class="qr-preview-link" href="${getQrPageUrl()}" target="_blank" rel="noreferrer">
           <img class="qr-preview" src="${qrSrc}" alt="QR Code do WhatsApp da Criarte" />
         </a>
-        <p class="helper">Escaneie com o WhatsApp da Criarte. Esta area atualiza sozinha enquanto a aba do chatbot estiver aberta.</p>
+        <p class="helper">Escaneie com o WhatsApp da Criarte. Esta area atualiza sozinha enquanto a aba do agente de IA estiver aberta.</p>
       </div>
     `
   }
@@ -708,7 +708,7 @@ const renderDashboardSection = () => {
 
       <div class="grid-2">
         <div class="card helper-card">
-          <div class="section-head"><h2>Chatbot Criarte</h2></div>
+          <div class="section-head"><h2>Agente de IA Criarte</h2></div>
           ${renderBotSummary()}
           <div class="mini-stats">
             <div class="mini-stat"><span>Pedidos via WhatsApp</span><strong>${state.botStatus.botOrders || kpis.botLeads}</strong></div>
@@ -1019,7 +1019,7 @@ const renderBotSection = () => {
         <div class="card helper-card">
           <div class="section-head"><h2>Como o fluxo esta integrado</h2></div>
           <div class="list">
-            <div class="list-item">O bot da Criarte coleta nome, servico, data e briefing pelo WhatsApp.</div>
+            <div class="list-item">A IA da Criarte conduz a conversa comercial e abre o briefing pelo WhatsApp.</div>
             <div class="list-item">Cada atendimento confirmado vira um cliente e um pedido com origem WhatsApp.</div>
             <div class="list-item">O painel consegue editar esses pedidos e o cliente pode pedir status pelo mesmo numero.</div>
           </div>
@@ -1127,7 +1127,7 @@ const renderApp = () => {
           <button class="nav-btn ${state.currentView === "clients" ? "active" : ""}" data-nav="clients">Clientes</button>
           <button class="nav-btn ${state.currentView === "orders" ? "active" : ""}" data-nav="orders">Pedidos</button>
           <button class="nav-btn ${state.currentView === "finance" ? "active" : ""}" data-nav="finance">Financeiro</button>
-          <button class="nav-btn ${state.currentView === "bot" ? "active" : ""}" data-nav="bot">Chatbot</button>
+          <button class="nav-btn ${state.currentView === "bot" ? "active" : ""}" data-nav="bot">Agente de IA</button>
         </nav>
         <div class="sidebar-footer">
           <button id="themeToggle" class="btn secondary" type="button"></button>
@@ -1204,7 +1204,7 @@ const openQrInNewTab = async () => {
       <body>
         <main>
           <h1>Abrindo QR Code...</h1>
-          <p>Estou localizando o servidor do chatbot da Criarte.</p>
+          <p>Estou localizando o servidor do agente de IA da Criarte.</p>
         </main>
       </body>
     </html>

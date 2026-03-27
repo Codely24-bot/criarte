@@ -2,6 +2,26 @@ const fs = require("fs")
 const http = require("http")
 const path = require("path")
 const { URL } = require("url")
+const { loadEnvFile } = require("./env-loader")
+
+loadEnvFile()
+
+const { mensagens, salesConfig } = require("./bot-config")
+const {
+  audioReplyStatusReason,
+  audioTranscriptionStatusReason,
+  isIncomingAudioMessage,
+  shouldSendAudioReply,
+  synthesizeSpeech,
+  transcribeAudioMessage
+} = require("./audio-service")
+const {
+  aiStatusReason,
+  generateSalesReply,
+  isAIEnabled,
+  model: aiModel,
+  providerName: aiProviderName
+} = require("./ai-service")
 
 const APP_DIR = __dirname
 const DATA_DIR = path.join(APP_DIR, "data")
@@ -109,6 +129,8 @@ const escapeHtml = (value = "") =>
     .replace(/'/g, "&#39;")
 
 const trimText = (value = "", max = 600) => String(value || "").trim().slice(0, max)
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const normalizeSpaces = (value = "") => String(value).replace(/\s+/g, " ").trim()
 
 const parseFlexibleDate = (value = "") => {
   const text = String(value).trim()
@@ -123,6 +145,73 @@ const parseFlexibleDate = (value = "") => {
   const parsedDate = new Date(iso)
   return Number.isNaN(parsedDate.getTime()) ? "" : iso
 }
+
+const getLeadNameFromContact = (contact) => {
+  const rawName = normalizeSpaces(contact?.pushname || contact?.shortName || contact?.name || "")
+  return rawName || null
+}
+
+const applyLeadNameToReply = (text = "", leadName = null) => {
+  const safeText = String(text || "")
+  const normalizedName = normalizeSpaces(leadName || "")
+
+  if (!normalizedName) {
+    return safeText.replace(/\[Seu Nome\]/gi, APP_NAME)
+  }
+
+  return safeText.replace(/\[Seu Nome\]/gi, normalizedName)
+}
+
+const createEmptyDraft = (phone = "") => ({
+  phone: comparablePhone(phone)
+})
+
+const getSession = (phone) => {
+  if (!sessions.has(phone)) {
+    sessions.set(phone, {
+      stage: "menu",
+      draft: createEmptyDraft(phone),
+      history: [],
+      leadName: null,
+      leadStage: "novo"
+    })
+  }
+
+  return sessions.get(phone)
+}
+
+const pushHistory = (session, role, content) => {
+  if (!content) return
+  session.history.push({ role, content: trimText(content, 1200) })
+  session.history = session.history.slice(-12)
+}
+
+const startBriefingTriggers = [
+  "orcamento",
+  "pedido",
+  "quero contratar",
+  "quero fechar",
+  "vamos fechar",
+  "vamos seguir",
+  "quero fazer",
+  "quero criar",
+  "podemos seguir"
+]
+const statusTriggers = ["acompanhar", "status", "meu pedido", "andamento"]
+const humanTriggers = ["atendente", "humano", "pessoa", "suporte"]
+const stopTriggers = ["parar", "sair", "nao quero", "sem interesse", "nao tenho interesse"]
+const priceTriggers = ["preco", "precos", "valor", "valores", "quanto custa", "investimento"]
+const serviceTriggers = ["servico", "servicos", "catalogo", "portfolio", "convite", "arte", "logo", "identidade"]
+const greetingTriggers = /^(menu|oi|ola|bom dia|boa tarde|boa noite|opa)$/i
+const collectingStages = new Set([
+  "collect_name",
+  "collect_service",
+  "collect_event_type",
+  "collect_event_date",
+  "collect_briefing",
+  "collect_email",
+  "confirm_order"
+])
 
 const defaultData = () => ({
   users: [{ id: "u-1", email: "admin@criarte.com", password: "123456", name: "Admin Criarte" }],
@@ -427,6 +516,12 @@ const getBotStatusPayload = () => {
     qrImagePath: "/qr.png",
     updatedAt: botRuntime.qrUpdatedAt,
     lastError: botRuntime.lastError,
+    aiEnabled: isAIEnabled,
+    aiProvider: isAIEnabled ? aiProviderName : null,
+    aiModel: isAIEnabled ? aiModel : null,
+    aiStatusReason,
+    audioReplyStatusReason,
+    audioTranscriptionStatusReason,
     botOrders: data.orders.filter((order) => order.source === "WhatsApp").length,
     pendingHuman: data.conversations.filter((conversation) => conversation.needsHuman).length
   }
@@ -440,7 +535,48 @@ const sendBotMessage = async (chatId, text, patch = {}) => {
 
 const sendTyping = async (chat) => {
   await chat.sendStateTyping()
-  await new Promise((resolve) => setTimeout(resolve, 1200))
+  await delay(1200)
+}
+
+const buildFallbackSalesReply = (text, leadName) => {
+  let reply = mensagens.fallback
+
+  if (stopTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.semInteresse
+  } else if (priceTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.preco
+  } else if (serviceTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.funcionalidades
+  } else if (greetingTriggers.test(text)) {
+    reply = mensagens.abertura
+  }
+
+  return applyLeadNameToReply(reply, leadName)
+}
+
+const respondToLead = async ({ chat, incomingMessage, text, patch = {} }) => {
+  await sendTyping(chat)
+  await sendBotMessage(incomingMessage.from, text, patch)
+
+  if (!shouldSendAudioReply(incomingMessage.type)) {
+    return
+  }
+
+  const audio = await synthesizeSpeech(text)
+  if (!audio) {
+    return
+  }
+
+  await chat.sendStateRecording()
+  await delay(1200)
+  await whatsappClient.sendMessage(incomingMessage.from, audio, { sendAudioAsVoice: true })
+  await chat.clearState().catch(() => null)
+}
+
+const replyAndTrack = async ({ chat, incomingMessage, session, text, patch = {} }) => {
+  await respondToLead({ chat, incomingMessage, text, patch })
+  pushHistory(session, "assistant", text)
+  return text
 }
 
 const formatCurrency = (value) =>
@@ -533,11 +669,18 @@ const parseServiceChoice = (value) => {
   return trimText(value, 120)
 }
 
-const startBotFlow = async (msg, chat, session) => {
+const startBotFlow = async (msg, chat, session, introMessage = "") => {
   session.stage = "collect_name"
-  session.draft = { phone: comparablePhone(msg.from) }
-  await sendTyping(chat)
-  await sendBotMessage(msg.from, "💌 Perfeito! Vamos abrir seu briefing na *Criarte*.\n\nPara comecar, me diga seu *nome completo*.")
+  session.draft = createEmptyDraft(msg.from)
+  const baseMessage = "Perfeito. Vamos abrir seu briefing na Criarte.\n\nPara comecar, me diga seu nome completo."
+  const message = [introMessage, baseMessage].filter(Boolean).join("\n\n")
+  await respondToLead({
+    chat,
+    incomingMessage: msg,
+    text: message,
+    patch: { stage: "collect_name", status: "coletando_nome" }
+  })
+  return message
 }
 
 const markHumanHandoff = (phone, session) => {
@@ -571,6 +714,365 @@ const registerLead = (phone, session) => {
   writeData(data)
 
   return { client, order, conversation }
+}
+
+const handleIncomingWhatsAppMessage = async (msg) => {
+  const incomingAudio = isIncomingAudioMessage(msg)
+
+  if (!msg.from || msg.from === "status@broadcast" || msg.from.endsWith("@g.us") || msg.fromMe || (!msg.body && !incomingAudio)) {
+    return
+  }
+
+  const now = Date.now()
+  const lastMessageAt = antiSpam.get(msg.from) || 0
+  if (now - lastMessageAt < 2500) return
+  antiSpam.set(msg.from, now)
+
+  const chat = await msg.getChat()
+  if (chat.isGroup) return
+
+  const contact = await msg.getContact()
+  const session = getSession(msg.from)
+  const leadName = getLeadNameFromContact(contact)
+  if (leadName) {
+    session.leadName = leadName
+  }
+
+  let textOriginal = trimText(msg.body || "", 800)
+
+  if (incomingAudio) {
+    const media = await msg.downloadMedia()
+    textOriginal = trimText((await transcribeAudioMessage(media)) || "", 800)
+
+    if (!textOriginal) {
+      await replyAndTrack({
+        chat,
+        incomingMessage: msg,
+        session,
+        text: applyLeadNameToReply(mensagens.audioNaoEntendido, session.leadName),
+        patch: {
+          stage: session.stage || "menu",
+          status: "audio_nao_entendido",
+          displayName: session.leadName || ""
+        }
+      })
+      return
+    }
+  }
+
+  if (!textOriginal) {
+    return
+  }
+
+  const text = normalizeText(textOriginal)
+  const userMessageText = incomingAudio ? `[audio] ${textOriginal}` : textOriginal
+
+  appendConversationMessage(msg.from, "user", userMessageText, {
+    stage: session.stage || "menu",
+    status: "ativo",
+    displayName: session.leadName || ""
+  })
+  pushHistory(session, "user", userMessageText)
+
+  if (greetingTriggers.test(text)) {
+    session.stage = "menu"
+    session.draft = createEmptyDraft(msg.from)
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: applyLeadNameToReply(mensagens.abertura, session.leadName),
+      patch: { stage: "menu", status: "ativo", displayName: session.leadName || "" }
+    })
+    return
+  }
+
+  if (humanTriggers.some((item) => text.includes(item)) || (session.stage === "menu" && text === "4")) {
+    session.stage = "menu"
+    session.leadStage = "fechamento"
+    markHumanHandoff(msg.from, session)
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: applyLeadNameToReply(mensagens.humano, session.leadName),
+      patch: {
+        stage: "aguardando_humano",
+        status: "aguardando_humano",
+        needsHuman: true,
+        displayName: session.leadName || session.draft.fullName || ""
+      }
+    })
+    return
+  }
+
+  if (statusTriggers.some((item) => text.includes(item)) || (session.stage === "menu" && text === "3")) {
+    const data = readData()
+    const client = findClientByPhone(data, msg.from)
+    const order = client ? getLatestOrderForClient(data, client.id) : null
+
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: buildStatusReply(order, client),
+      patch: {
+        stage: "menu",
+        status: order ? "status_enviado" : "sem_pedido",
+        displayName: session.leadName || client?.fullName || ""
+      }
+    })
+    return
+  }
+
+  if ((text === "1" && session.stage === "menu") || startBriefingTriggers.some((item) => text.includes(item))) {
+    const flowMessage = await startBotFlow(msg, chat, session)
+    pushHistory(session, "assistant", flowMessage)
+    return
+  }
+
+  if (session.stage === "collect_name") {
+    if (textOriginal.length < 3) {
+      await replyAndTrack({
+        chat,
+        incomingMessage: msg,
+        session,
+        text: "Preciso de um nome um pouco mais completo para registrar seu atendimento. Pode me enviar novamente?",
+        patch: { stage: "collect_name", status: "coletando_nome", displayName: session.leadName || "" }
+      })
+      return
+    }
+
+    session.draft.fullName = trimText(textOriginal, 120)
+    session.stage = "collect_service"
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text:
+        "Qual servico voce quer pedir?\n\n1. Convite digital\n2. Arte para Instagram\n3. Arte personalizada\n4. Logotipo\n5. Identidade visual\n\nSe preferir, pode responder com seu proprio texto.",
+      patch: { stage: "collect_service", status: "coletando_servico", displayName: session.draft.fullName }
+    })
+    return
+  }
+
+  if (session.stage === "collect_service") {
+    session.draft.serviceType = parseServiceChoice(textOriginal)
+    session.stage = "collect_event_type"
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: "Perfeito. Agora me conte o tipo de evento ou o objetivo dessa arte.",
+      patch: { stage: "collect_event_type", status: "coletando_objetivo", displayName: session.draft.fullName || "" }
+    })
+    return
+  }
+
+  if (session.stage === "collect_event_type") {
+    session.draft.eventType = trimText(textOriginal, 120)
+    session.stage = "collect_event_date"
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: "Qual a data do evento ou o prazo ideal de entrega?\n\nVoce pode responder no formato DD/MM/AAAA ou digitar a definir.",
+      patch: { stage: "collect_event_date", status: "coletando_prazo", displayName: session.draft.fullName || "" }
+    })
+    return
+  }
+
+  if (session.stage === "collect_event_date") {
+    if (text.includes("definir") || text.includes("nao sei") || text.includes("nao tenho")) {
+      session.draft.eventDate = ""
+    } else {
+      const parsedDate = parseFlexibleDate(textOriginal)
+      if (!parsedDate) {
+        await replyAndTrack({
+          chat,
+          incomingMessage: msg,
+          session,
+          text: "Nao consegui entender a data. Pode enviar no formato DD/MM/AAAA ou responder a definir?",
+          patch: { stage: "collect_event_date", status: "coletando_prazo", displayName: session.draft.fullName || "" }
+        })
+        return
+      }
+
+      session.draft.eventDate = parsedDate
+    }
+
+    session.stage = "collect_briefing"
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text:
+        "Agora me envie um briefing rapido.\n\nExemplo: tema, cores, texto principal, publico, referencias e qualquer detalhe importante.",
+      patch: { stage: "collect_briefing", status: "coletando_briefing", displayName: session.draft.fullName || "" }
+    })
+    return
+  }
+
+  if (session.stage === "collect_briefing") {
+    if (textOriginal.length < 8) {
+      await replyAndTrack({
+        chat,
+        incomingMessage: msg,
+        session,
+        text: "Pode me contar um pouco mais sobre o que voce precisa? Isso ajuda a equipe da Criarte a receber um briefing completo.",
+        patch: { stage: "collect_briefing", status: "coletando_briefing", displayName: session.draft.fullName || "" }
+      })
+      return
+    }
+
+    session.draft.briefing = trimText(textOriginal, 1200)
+    session.stage = "collect_email"
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: "Se quiser, me passe um e-mail para contato. Se preferir pular, digite pular.",
+      patch: { stage: "collect_email", status: "coletando_email", displayName: session.draft.fullName || "" }
+    })
+    return
+  }
+
+  if (session.stage === "collect_email") {
+    if (text === "pular") {
+      session.draft.email = ""
+    } else {
+      const email = trimText(textOriginal, 160)
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        await replyAndTrack({
+          chat,
+          incomingMessage: msg,
+          session,
+          text: "Esse e-mail parece invalido. Pode enviar novamente ou digitar pular.",
+          patch: { stage: "collect_email", status: "coletando_email", displayName: session.draft.fullName || "" }
+        })
+        return
+      }
+
+      session.draft.email = email
+    }
+
+    session.stage = "confirm_order"
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: buildConfirmationSummary(session.draft),
+      patch: { stage: "confirm_order", status: "confirmando", displayName: session.draft.fullName || "" }
+    })
+    return
+  }
+
+  if (session.stage === "confirm_order") {
+    if (text === "2" || text.includes("cancel")) {
+      session.stage = "menu"
+      session.draft = createEmptyDraft(msg.from)
+      await replyAndTrack({
+        chat,
+        incomingMessage: msg,
+        session,
+        text: "Tudo certo. O pedido nao foi registrado.\n\nSe quiser recomecar, digite orcamento.",
+        patch: { stage: "menu", status: "ativo", displayName: session.leadName || "" }
+      })
+      return
+    }
+
+    if (text !== "1" && !text.includes("confirm")) {
+      await replyAndTrack({
+        chat,
+        incomingMessage: msg,
+        session,
+        text: "Para concluir, responda com 1 para confirmar ou 2 para cancelar.",
+        patch: { stage: "confirm_order", status: "confirmando", displayName: session.draft.fullName || "" }
+      })
+      return
+    }
+
+    const { client, order } = registerLead(msg.from, session)
+    session.stage = "menu"
+    session.draft = createEmptyDraft(msg.from)
+    session.leadStage = "fechamento"
+
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text:
+        `Pronto. Seu atendimento foi registrado com sucesso na ${APP_NAME}.\n\nNumero do pedido: ${order.id}\nCliente: ${client.fullName}\nServico: ${order.serviceType}\nStatus inicial: ${order.orderStatus}\n\nNossa equipe pode continuar por este mesmo WhatsApp.`,
+      patch: {
+        stage: "novo_pedido",
+        status: "aguardando_contato",
+        needsHuman: true,
+        clientId: client.id,
+        orderId: order.id,
+        summary: order.briefing,
+        displayName: client.fullName
+      }
+    })
+    return
+  }
+
+  const aiReply = await generateSalesReply({
+    message: textOriginal,
+    history: session.history.slice(0, -1),
+    leadName: session.leadName,
+    leadStage: session.leadStage,
+    salesConfig
+  })
+
+  if (aiReply?.leadStage) {
+    session.leadStage = aiReply.leadStage
+  }
+
+  if (aiReply?.intent === "encaminhar_humano") {
+    session.stage = "menu"
+    markHumanHandoff(msg.from, session)
+
+    await replyAndTrack({
+      chat,
+      incomingMessage: msg,
+      session,
+      text: applyLeadNameToReply(aiReply.reply || mensagens.humano, session.leadName),
+      patch: {
+        stage: "aguardando_humano",
+        status: "aguardando_humano",
+        needsHuman: true,
+        summary: trimText(aiReply.summary || "", 1200),
+        displayName: session.leadName || session.draft.fullName || ""
+      }
+    })
+    return
+  }
+
+  if (aiReply?.intent === "iniciar_briefing") {
+    const flowMessage = await startBotFlow(
+      msg,
+      chat,
+      session,
+      applyLeadNameToReply(aiReply.reply || mensagens.demonstracao, session.leadName)
+    )
+    pushHistory(session, "assistant", flowMessage)
+    return
+  }
+
+  const replyText = applyLeadNameToReply(aiReply?.reply || buildFallbackSalesReply(text, session.leadName), session.leadName)
+
+  await replyAndTrack({
+    chat,
+    incomingMessage: msg,
+    session,
+    text: replyText,
+    patch: {
+      stage: collectingStages.has(session.stage) ? session.stage : "menu",
+      status: aiReply?.leadStage || "ativo",
+      summary: trimText(aiReply?.summary || "", 1200),
+      displayName: session.leadName || session.draft.fullName || ""
+    }
+  })
 }
 
 const safeRequireWhatsApp = () => {
@@ -636,6 +1138,9 @@ const startWhatsApp = () => {
     botRuntime.qrUpdatedAt = nowIso()
     botRuntime.lastError = ""
     console.log("Bot WhatsApp da Criarte conectado.")
+    console.log(`IA habilitada: ${aiStatusReason}`)
+    console.log(`Transcricao de audio: ${audioTranscriptionStatusReason}`)
+    console.log(`Resposta em audio: ${audioReplyStatusReason}`)
   })
 
   whatsappClient.on("auth_failure", (error) => {
@@ -654,6 +1159,7 @@ const startWhatsApp = () => {
 
   whatsappClient.on("message", async (msg) => {
     try {
+      return await handleIncomingWhatsAppMessage(msg)
       if (!msg.from || msg.from === "status@broadcast" || msg.from.endsWith("@g.us") || msg.fromMe || !msg.body) {
         return
       }
@@ -1012,7 +1518,7 @@ const serveQrPage = (res) => {
   <body>
     <main>
       <h1>WhatsApp conectado</h1>
-      <p>O chatbot da Criarte ja esta autenticado e pronto para atender.</p>
+      <p>O agente de IA da Criarte ja esta autenticado e pronto para atender.</p>
       <p>Atualizado em: ${escapeHtml(payload.updatedAt || nowIso())}</p>
     </main>
   </body>
