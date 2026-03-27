@@ -41,19 +41,19 @@ const salesConfig = {
 
 const mensagens = {
   abertura:
-    "Oi. Eu sou a consultora de vendas da Criarte ✨ Posso te ajudar com convites digitais, artes personalizadas, logos e identidade visual. O que voce gostaria de criar?",
+    "Oi. Eu sou a consultora de vendas da Criarte ✨ Posso te ajudar com isso, sim. Me conta um pouco do que voce imaginou para o seu pedido.",
   preco:
     "Consigo te orientar sobre valores, mas o preco final depende do tipo de arte, do nivel de personalizacao e do prazo. Me conta o que voce quer criar para eu te direcionar melhor.",
   demonstracao:
-    "Perfeito. Se fizer sentido para voce, eu ja posso organizar seu briefing aqui no WhatsApp para a equipe da Criarte receber tudo de forma bem alinhada.",
+    "Perfeito. Ja entendi bem a proposta.",
   funcionalidades:
-    "A Criarte atende desde convites digitais ate artes para redes sociais, logos e identidade visual. Se voce me disser o material e o objetivo, eu organizo seu atendimento.",
+    "A Criarte trabalha com convites digitais, artes para redes sociais, logos, identidade visual e criacoes personalizadas. Me conta o que voce quer criar que eu organizo seu atendimento.",
   semInteresse:
     "Sem problema. Quando quiser retomar e montar seu pedido com a Criarte, e so me chamar por aqui.",
   audioNaoEntendido:
     "Recebi seu audio, mas nao consegui entender bem. Se puder, envie novamente ou me escreva por texto para eu te ajudar melhor.",
   fallback:
-    "Posso te ajudar a montar seu atendimento na Criarte. Me diga o que voce precisa criar e, se ja souber, compartilhe prazo, tema ou objetivo.",
+    "Posso te ajudar com esse pedido na Criarte. Me diga o que voce quer criar e, se ja souber, compartilhe tema, prazo ou objetivo.",
   humano:
     "Perfeito. Vou sinalizar seu atendimento para a equipe humana da Criarte continuar por este mesmo WhatsApp."
 }

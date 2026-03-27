@@ -206,7 +206,6 @@ const greetingTriggers = /^(oi|ola|bom dia|boa tarde|boa noite|opa)$/i
 const collectingStages = new Set([
   "collect_name",
   "collect_service",
-  "collect_event_type",
   "collect_event_date",
   "collect_briefing",
   "collect_email",
@@ -589,6 +588,143 @@ const formatCurrency = (value) =>
 const detectServiceOffer = (text) =>
   Object.entries(SERVICE_OFFERS).find(([, offer]) => offer.keywords.some((keyword) => text.includes(normalizeText(keyword))))?.[0] || ""
 
+const inferServiceFromSession = (session) => {
+  const context = normalizeText(
+    (session?.history || [])
+      .slice(-8)
+      .map((item) => item.content)
+      .join(" ")
+  )
+  const detectedOffer = detectServiceOffer(context)
+  return detectedOffer ? SERVICE_OFFERS[detectedOffer].name : ""
+}
+
+const timelineKeywords = [
+  "hoje",
+  "amanha",
+  "semana",
+  "mes",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+  "janeiro",
+  "fevereiro",
+  "marco"
+]
+
+const looksLikeEventDateText = (value = "") => {
+  const text = normalizeText(value)
+  if (!text) return false
+  if (parseFlexibleDate(value)) return true
+  return /\d/.test(text) && timelineKeywords.some((keyword) => text.includes(keyword))
+}
+
+const inferEventDateFromSession = (session) =>
+  (session?.history || [])
+    .filter((item) => item.role === "user")
+    .slice(-4)
+    .map((item) => trimText(item.content, 120))
+    .reverse()
+    .find((content) => looksLikeEventDateText(content)) || ""
+
+const buildPromptForStage = (stage) => {
+  if (stage === "collect_event_date") {
+    return "Agora me diga a data do evento ou o prazo ideal de entrega, para eu organizar seu atendimento."
+  }
+
+  if (stage === "collect_briefing") {
+    return "Otimo 💕\n\nAgora me passe o briefing que voce ja tem: nome, idade, horario, local, texto principal, referencias e qualquer detalhe importante que queira colocar."
+  }
+
+  if (stage === "collect_name") {
+    return "Perfeito. Para eu registrar tudo certinho no sistema da Criarte, qual nome completo devo colocar no seu atendimento?"
+  }
+
+  if (stage === "collect_email") {
+    return "Perfeito. Se fizer sentido para voce, agora me passe um e-mail para contato. Se preferir seguir sem e-mail, pode escrever pular."
+  }
+
+  return "Perfeito. Vou organizar seu atendimento por aqui.\n\nMe diga qual material voce quer criar e, se quiser, ja me conte um pouco do que voce imaginou."
+}
+
+const stageAlreadyRequestedInMessage = (text = "", stage) => {
+  const normalized = normalizeText(text)
+
+  if (stage === "collect_event_date") {
+    return normalized.includes("data do evento") || normalized.includes("prazo")
+  }
+
+  if (stage === "collect_briefing") {
+    return normalized.includes("briefing")
+  }
+
+  if (stage === "collect_name") {
+    return normalized.includes("nome completo") || normalized.includes("qual nome")
+  }
+
+  if (stage === "collect_email") {
+    return normalized.includes("e-mail") || normalized.includes("email")
+  }
+
+  return normalized.includes("qual material") || normalized.includes("o que voce quer criar")
+}
+
+const getFlowPatchForStage = (stage) => {
+  if (stage === "collect_event_date") {
+    return { stage, status: "coletando_prazo" }
+  }
+
+  if (stage === "collect_briefing") {
+    return { stage, status: "coletando_briefing" }
+  }
+
+  if (stage === "collect_name") {
+    return { stage, status: "coletando_nome" }
+  }
+
+  if (stage === "collect_email") {
+    return { stage, status: "coletando_email" }
+  }
+
+  return { stage: "collect_service", status: "coletando_servico" }
+}
+
+const resolveBriefingStage = ({ introMessage = "", hasService, hasEventDate }) => {
+  const normalized = normalizeText(introMessage)
+
+  if (normalized.includes("e-mail") || normalized.includes("email")) {
+    return "collect_email"
+  }
+
+  if (normalized.includes("nome completo") || normalized.includes("qual nome")) {
+    return "collect_name"
+  }
+
+  if (normalized.includes("briefing")) {
+    return "collect_briefing"
+  }
+
+  if (normalized.includes("data do evento") || normalized.includes("prazo")) {
+    return "collect_event_date"
+  }
+
+  if (hasService && hasEventDate) {
+    return "collect_briefing"
+  }
+
+  if (hasService) {
+    return "collect_event_date"
+  }
+
+  return "collect_service"
+}
+
 const servicePriceGuide = Object.values(SERVICE_OFFERS)
   .map((offer) => `${offer.emoji} ${offer.name} - a partir de ${formatCurrency(offer.price)}`)
   .join("\n")
@@ -646,11 +782,11 @@ const buildStatusReply = (order, client) => {
 const buildConfirmationSummary = (draft) =>
   [
     "Vou registrar seu atendimento com estes dados:",
-    `Nome: ${draft.fullName}`,
-    `Servico: ${draft.serviceType}`,
-    `Objetivo/evento: ${draft.eventType}`,
+    `Nome: ${draft.fullName || "Nao informado"}`,
+    `Servico: ${draft.serviceType || "Nao informado"}`,
+    `Objetivo/evento: ${draft.eventType || "Nao informado"}`,
     `Prazo/data: ${draft.eventDate || "A definir"}`,
-    `Briefing: ${draft.briefing}`,
+    `Briefing: ${draft.briefing || "Nao informado"}`,
     `E-mail: ${draft.email || "Nao informado"}`,
     "",
     "Se estiver tudo certo, me responda com confirmo.",
@@ -672,16 +808,37 @@ const parseServiceChoice = (value) => {
 }
 
 const startBotFlow = async (msg, chat, session, introMessage = "") => {
-  session.stage = "collect_name"
   session.draft = createEmptyDraft(msg.from)
-  const baseMessage =
-    "Perfeito. Vou organizar seu atendimento por aqui.\n\nPara eu registrar tudo certo no sistema, qual nome completo devo colocar?"
-  const message = [introMessage, baseMessage].filter(Boolean).join("\n\n")
+  const inferredService = inferServiceFromSession(session)
+  const inferredEventDate = inferEventDateFromSession(session)
+
+  if (inferredService) {
+    session.draft.serviceType = inferredService
+    session.draft.eventType = inferredService
+  }
+
+  if (inferredEventDate) {
+    session.draft.eventDate = inferredEventDate
+  }
+
+  session.stage = resolveBriefingStage({
+    introMessage,
+    hasService: Boolean(inferredService),
+    hasEventDate: Boolean(inferredEventDate)
+  })
+
+  const baseMessage = buildPromptForStage(session.stage)
+  const message =
+    introMessage && stageAlreadyRequestedInMessage(introMessage, session.stage)
+      ? introMessage
+      : [introMessage, baseMessage].filter(Boolean).join("\n\n")
+  const patch = getFlowPatchForStage(session.stage)
+
   await respondToLead({
     chat,
     incomingMessage: msg,
     text: message,
-    patch: { stage: "collect_name", status: "coletando_nome" }
+    patch
   })
   return message
 }
@@ -754,7 +911,7 @@ const handleIncomingWhatsAppMessage = async (msg) => {
         session,
         text: applyLeadNameToReply(mensagens.audioNaoEntendido, session.leadName),
         patch: {
-          stage: session.stage || "menu",
+          stage: session.stage || DEFAULT_CONVERSATION_STAGE,
           status: "audio_nao_entendido",
           displayName: session.leadName || ""
         }
@@ -807,7 +964,7 @@ const handleIncomingWhatsAppMessage = async (msg) => {
       session,
       text: buildStatusReply(order, client),
       patch: {
-        stage: "menu",
+        stage: DEFAULT_CONVERSATION_STAGE,
         status: order ? "status_enviado" : "sem_pedido",
         displayName: session.leadName || client?.fullName || ""
       }
@@ -834,39 +991,26 @@ const handleIncomingWhatsAppMessage = async (msg) => {
     }
 
     session.draft.fullName = trimText(textOriginal, 120)
-    session.stage = "collect_service"
+    session.stage = "collect_email"
     await replyAndTrack({
       chat,
       incomingMessage: msg,
       session,
-      text:
-        "Perfeito. Agora me diga qual material voce precisa.\n\nPode falar com suas palavras, por exemplo: convite digital, arte para Instagram, logotipo, identidade visual ou algo personalizado.",
-      patch: { stage: "collect_service", status: "coletando_servico", displayName: session.draft.fullName }
+      text: "Perfeito. Se fizer sentido para voce, agora me passe um e-mail para contato. Se preferir seguir sem e-mail, pode escrever pular.",
+      patch: { stage: "collect_email", status: "coletando_email", displayName: session.draft.fullName }
     })
     return
   }
 
   if (session.stage === "collect_service") {
     session.draft.serviceType = parseServiceChoice(textOriginal)
-    session.stage = "collect_event_type"
-    await replyAndTrack({
-      chat,
-      incomingMessage: msg,
-      session,
-      text: "Perfeito. Agora me conte o tipo de evento ou o objetivo dessa arte.",
-      patch: { stage: "collect_event_type", status: "coletando_objetivo", displayName: session.draft.fullName || "" }
-    })
-    return
-  }
-
-  if (session.stage === "collect_event_type") {
-    session.draft.eventType = trimText(textOriginal, 120)
+    session.draft.eventType = session.draft.eventType || session.draft.serviceType
     session.stage = "collect_event_date"
     await replyAndTrack({
       chat,
       incomingMessage: msg,
       session,
-      text: "Agora me diga a data do evento ou o prazo ideal de entrega. Se ainda nao souber, pode me falar isso sem problema.",
+      text: "Perfeito. Agora me diga a data do evento ou o prazo ideal de entrega, para eu organizar seu atendimento.",
       patch: { stage: "collect_event_date", status: "coletando_prazo", displayName: session.draft.fullName || "" }
     })
     return
@@ -877,18 +1021,20 @@ const handleIncomingWhatsAppMessage = async (msg) => {
       session.draft.eventDate = ""
     } else {
       const parsedDate = parseFlexibleDate(textOriginal)
-      if (!parsedDate) {
+      if (parsedDate) {
+        session.draft.eventDate = parsedDate
+      } else if (looksLikeEventDateText(textOriginal) || textOriginal.length >= 4) {
+        session.draft.eventDate = trimText(textOriginal, 120)
+      } else {
         await replyAndTrack({
           chat,
           incomingMessage: msg,
           session,
-          text: "Nao consegui entender a data. Se preferir, pode enviar no formato DD/MM/AAAA ou me dizer que ainda vai definir.",
+          text: "Nao consegui entender a data. Se preferir, pode me dizer de forma natural, como dia 18 de abril, ou informar que ainda vai definir.",
           patch: { stage: "collect_event_date", status: "coletando_prazo", displayName: session.draft.fullName || "" }
         })
         return
       }
-
-      session.draft.eventDate = parsedDate
     }
 
     session.stage = "collect_briefing"
@@ -897,7 +1043,7 @@ const handleIncomingWhatsAppMessage = async (msg) => {
       incomingMessage: msg,
       session,
       text:
-        "Agora me passe um briefing do que voce precisa.\n\nSe puder, me conte tema, cores, texto principal, referencias e qualquer detalhe importante.",
+        "Otimo 💕\n\nAgora me passe o briefing que voce ja tem: nome, idade, horario, local, texto principal, referencias e qualquer detalhe importante que queira colocar.",
       patch: { stage: "collect_briefing", status: "coletando_briefing", displayName: session.draft.fullName || "" }
     })
     return
@@ -916,13 +1062,14 @@ const handleIncomingWhatsAppMessage = async (msg) => {
     }
 
     session.draft.briefing = trimText(textOriginal, 1200)
-    session.stage = "collect_email"
+    session.draft.eventType = session.draft.eventType || trimText(textOriginal, 120)
+    session.stage = "collect_name"
     await replyAndTrack({
       chat,
       incomingMessage: msg,
       session,
-      text: "Se fizer sentido para voce, me passe um e-mail para contato. Se preferir seguir sem e-mail, pode escrever pular.",
-      patch: { stage: "collect_email", status: "coletando_email", displayName: session.draft.fullName || "" }
+      text: "Perfeito. Para eu registrar tudo certinho no sistema da Criarte, qual nome completo devo colocar no seu atendimento?",
+      patch: { stage: "collect_name", status: "coletando_nome", displayName: session.leadName || "" }
     })
     return
   }
