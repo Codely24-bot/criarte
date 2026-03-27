@@ -107,115 +107,15 @@
     {
       "id": "conv-qikhugyk",
       "phone": "18215903410",
-      "stage": "menu",
-      "status": "oferta_logotipo",
-      "displayName": "Igor de Souza",
+      "stage": "conversa",
+      "status": "ativo",
+      "displayName": "Vitor De Souza",
       "orderId": "o-qgsq5gx9",
       "clientId": "c-nhwvhymb",
       "needsHuman": true,
-      "updatedAt": "2026-03-27T21:03:11.017Z",
-      "summary": "Objetivo: Colocar em topo de bolo\nPrazo/evento: 2026-03-26\nDetalhes: Com Jesus",
+      "updatedAt": "2026-03-27T21:35:27.134Z",
+      "summary": "",
       "messages": [
-        {
-          "direction": "user",
-          "text": "1",
-          "timestamp": "2026-03-23T22:40:31.273Z"
-        },
-        {
-          "direction": "bot",
-          "text": "💌 Perfeito! Vamos abrir seu briefing na *Criarte*.\n\nPara comecar, me diga seu *nome completo*.",
-          "timestamp": "2026-03-23T22:40:32.735Z"
-        },
-        {
-          "direction": "user",
-          "text": "Igor de Souza",
-          "timestamp": "2026-03-23T22:40:40.722Z"
-        },
-        {
-          "direction": "bot",
-          "text": "🎨 Qual servico voce quer pedir?\n\n1. 💌 Convite digital\n2. 📱 Arte para Instagram\n3. ✨ Arte personalizada\n4. 🧠 Logotipo\n5. 🏷️ Identidade visual\n\nSe preferir, pode responder com seu proprio texto.",
-          "timestamp": "2026-03-23T22:40:42.154Z"
-        },
-        {
-          "direction": "user",
-          "text": "Mascotinho",
-          "timestamp": "2026-03-23T22:40:51.026Z"
-        },
-        {
-          "direction": "bot",
-          "text": "🎯 Perfeito! Agora me conte o tipo de evento ou objetivo dessa arte.",
-          "timestamp": "2026-03-23T22:40:52.543Z"
-        },
-        {
-          "direction": "user",
-          "text": "Colocar em topo de bolo",
-          "timestamp": "2026-03-23T22:41:21.333Z"
-        },
-        {
-          "direction": "bot",
-          "text": "📅 Qual a data do evento ou o prazo ideal de entrega?\n\nVoce pode responder no formato DD/MM/AAAA ou digitar *a definir*.",
-          "timestamp": "2026-03-23T22:41:22.784Z"
-        },
-        {
-          "direction": "user",
-          "text": "26/03/2026",
-          "timestamp": "2026-03-23T22:41:35.835Z"
-        },
-        {
-          "direction": "bot",
-          "text": "📝 Agora me envie um briefing rapido.\n\nExemplo: tema, cores, texto principal, publico, referencias e qualquer detalhe importante.",
-          "timestamp": "2026-03-23T22:41:37.343Z"
-        },
-        {
-          "direction": "user",
-          "text": "Com Jesus",
-          "timestamp": "2026-03-23T22:43:23.672Z"
-        },
-        {
-          "direction": "bot",
-          "text": "📩 Se quiser, me passe um e-mail para contato. Se preferir pular, digite *pular*.",
-          "timestamp": "2026-03-23T22:43:25.149Z"
-        },
-        {
-          "direction": "user",
-          "text": "Pular",
-          "timestamp": "2026-03-23T22:43:30.662Z"
-        },
-        {
-          "direction": "bot",
-          "text": "✨ Vou registrar seu atendimento com estes dados:\n👤 Nome: Igor de Souza\n🎨 Servico: Mascotinho\n🎯 Objetivo/evento: Colocar em topo de bolo\n📅 Prazo/data: 2026-03-26\n📝 Briefing: Com Jesus\n📩 E-mail: Nao informado\n\nResponda com *1* para confirmar ou *2* para cancelar.",
-          "timestamp": "2026-03-23T22:43:32.106Z"
-        },
-        {
-          "direction": "user",
-          "text": "1",
-          "timestamp": "2026-03-23T22:44:02.277Z"
-        },
-        {
-          "direction": "bot",
-          "text": "🎉 Pronto! Seu atendimento foi registrado com sucesso na *Criarte*.\n\n🧾 Numero do pedido: o-qgsq5gx9\n👤 Cliente: Igor de Souza\n🎨 Servico: Mascotinho\n📍 Status inicial: Novo lead\n\n💬 Nossa equipe pode continuar por este mesmo WhatsApp.",
-          "timestamp": "2026-03-23T22:44:03.732Z"
-        },
-        {
-          "direction": "user",
-          "text": "Ola",
-          "timestamp": "2026-03-27T20:48:40.899Z"
-        },
-        {
-          "direction": "bot",
-          "text": "✨ Ola! Eu sou o assistente virtual da *Criarte*.\n\n🎨 Criamos artes personalizadas e convites digitais para deixar sua ideia linda, profissional e pronta para encantar.\n\nEscolha uma opcao:\n1. 💌 Quero pedir um orcamento\n2. 🎨 Ver servicos\n3. 📦 Acompanhar meu pedido\n4. 👩‍💼 Falar com atendente",
-          "timestamp": "2026-03-27T20:48:43.610Z"
-        },
-        {
-          "direction": "user",
-          "text": "1",
-          "timestamp": "2026-03-27T20:48:54.974Z"
-        },
-        {
-          "direction": "bot",
-          "text": "💌 Perfeito! Vamos abrir seu briefing na *Criarte*.\n\nPara comecar, me diga seu *nome completo*.",
-          "timestamp": "2026-03-27T20:48:56.509Z"
-        },
         {
           "direction": "user",
           "text": "Vitor de souza",
@@ -265,6 +165,106 @@
           "direction": "bot",
           "text": "🧠 *Logotipo na Criarte*\n\nUma opcao para quem precisa apresentar sua marca com mais profissionalismo, memorabilidade e identidade.\n\n💸 Valor-base: *a partir de R$ 180,00*\n📌 O valor final pode variar conforme personalizacao, prazo e quantidade de ajustes.\n\nSe quiser, responda *orcamento* e eu ja abro seu atendimento.",
           "timestamp": "2026-03-27T21:03:11.017Z"
+        },
+        {
+          "direction": "user",
+          "text": "Ola",
+          "timestamp": "2026-03-27T21:20:29.214Z"
+        },
+        {
+          "direction": "bot",
+          "text": "✨ Ola! Eu sou o assistente virtual da *Criarte*.\n\n🎨 Criamos artes personalizadas e convites digitais para deixar sua ideia linda, profissional e pronta para encantar.\n\nEscolha uma opcao:\n1. 💌 Quero pedir um orcamento\n2. 🎨 Ver servicos\n3. 📦 Acompanhar meu pedido\n4. 👩‍💼 Falar com atendente",
+          "timestamp": "2026-03-27T21:20:30.662Z"
+        },
+        {
+          "direction": "user",
+          "text": "Qual o valor do convite interativo ?",
+          "timestamp": "2026-03-27T21:21:04.633Z"
+        },
+        {
+          "direction": "bot",
+          "text": "💸 *Valores-base da Criarte*\n\n💌 Convite digital - a partir de R$ 89,00\n📱 Arte para Instagram - a partir de R$ 35,00\n✨ Arte personalizada - a partir de R$ 120,00\n🧠 Logotipo - a partir de R$ 180,00\n🏷️ Identidade visual - a partir de R$ 420,00\n\n✨ Cada pedido recebe um valor final conforme nivel de personalizacao, prazo e quantidade de ajustes.\n\nSe quiser seu valor agora, responda *orcamento* e eu monto seu atendimento.",
+          "timestamp": "2026-03-27T21:21:06.258Z"
+        },
+        {
+          "direction": "user",
+          "text": "Olá",
+          "timestamp": "2026-03-27T21:28:16.833Z"
+        },
+        {
+          "direction": "bot",
+          "text": "✨ Ola! Eu sou o assistente virtual da *Criarte*.\n\n🎨 Criamos artes personalizadas e convites digitais para deixar sua ideia linda, profissional e pronta para encantar.\n\nEscolha uma opcao:\n1. 💌 Quero pedir um orcamento\n2. 🎨 Ver servicos\n3. 📦 Acompanhar meu pedido\n4. 👩‍💼 Falar com atendente",
+          "timestamp": "2026-03-27T21:28:18.284Z"
+        },
+        {
+          "direction": "user",
+          "text": "Olá",
+          "timestamp": "2026-03-27T21:33:58.568Z"
+        },
+        {
+          "direction": "bot",
+          "text": "Oi. Eu sou a consultora de vendas da Criarte ✨ Posso te ajudar com convites digitais, artes personalizadas, logos e identidade visual. O que voce gostaria de criar?",
+          "timestamp": "2026-03-27T21:34:01.028Z"
+        },
+        {
+          "direction": "user",
+          "text": "Um mascotinho",
+          "timestamp": "2026-03-27T21:34:13.736Z"
+        },
+        {
+          "direction": "bot",
+          "text": "Posso te ajudar a montar seu atendimento na Criarte. Me diga o que voce precisa criar e, se ja souber, compartilhe prazo, tema ou objetivo.",
+          "timestamp": "2026-03-27T21:34:16.009Z"
+        },
+        {
+          "direction": "user",
+          "text": "Quero um convite se casamento",
+          "timestamp": "2026-03-27T21:34:37.875Z"
+        },
+        {
+          "direction": "bot",
+          "text": "A Criarte atende desde convites digitais ate artes para redes sociais, logos e identidade visual. Se voce me disser o material e o objetivo, eu organizo seu atendimento.",
+          "timestamp": "2026-03-27T21:34:40.115Z"
+        },
+        {
+          "direction": "user",
+          "text": "Olá",
+          "timestamp": "2026-03-27T21:34:53.539Z"
+        },
+        {
+          "direction": "bot",
+          "text": "Oi. Eu sou a consultora de vendas da Criarte ✨ Posso te ajudar com convites digitais, artes personalizadas, logos e identidade visual. O que voce gostaria de criar?",
+          "timestamp": "2026-03-27T21:34:55.233Z"
+        },
+        {
+          "direction": "user",
+          "text": "Convite de casamento",
+          "timestamp": "2026-03-27T21:35:04.371Z"
+        },
+        {
+          "direction": "bot",
+          "text": "A Criarte atende desde convites digitais ate artes para redes sociais, logos e identidade visual. Se voce me disser o material e o objetivo, eu organizo seu atendimento.",
+          "timestamp": "2026-03-27T21:35:06.060Z"
+        },
+        {
+          "direction": "user",
+          "text": "Olá",
+          "timestamp": "2026-03-27T21:35:13.928Z"
+        },
+        {
+          "direction": "bot",
+          "text": "Oi. Eu sou a consultora de vendas da Criarte ✨ Posso te ajudar com convites digitais, artes personalizadas, logos e identidade visual. O que voce gostaria de criar?",
+          "timestamp": "2026-03-27T21:35:16.324Z"
+        },
+        {
+          "direction": "user",
+          "text": "Convite digital",
+          "timestamp": "2026-03-27T21:35:24.952Z"
+        },
+        {
+          "direction": "bot",
+          "text": "A Criarte atende desde convites digitais ate artes para redes sociais, logos e identidade visual. Se voce me disser o material e o objetivo, eu organizo seu atendimento.",
+          "timestamp": "2026-03-27T21:35:27.134Z"
         }
       ]
     }

@@ -170,7 +170,7 @@ const normalizeOrder = (order = {}) => ({
 const normalizeConversation = (conversation = {}) => ({
   id: String(conversation.id || id("conv")),
   phone: normalizePhone(conversation.phone || ""),
-  stage: String(conversation.stage || "menu"),
+  stage: String(conversation.stage || "conversa"),
   status: String(conversation.status || "ativo"),
   displayName: String(conversation.displayName || ""),
   orderId: String(conversation.orderId || ""),
@@ -1079,7 +1079,7 @@ const renderBotSection = () => {
                       <div class="list-item">
                         <div class="conversation-head">
                           <strong>${escapeHtml(label)}</strong>
-                          <span class="badge ${conversation.needsHuman ? "warning" : ""}">${escapeHtml(conversation.stage || "menu")}</span>
+                          <span class="badge ${conversation.needsHuman ? "warning" : ""}">${escapeHtml(conversation.stage || "conversa")}</span>
                         </div>
                         <div class="helper">Telefone: ${escapeHtml(conversation.phone || "-")} | Atualizado: ${formatDateTime(conversation.updatedAt)}</div>
                         <div>${truncateText(conversation.summary || lastMessage?.text || "Sem resumo", 180)}</div>

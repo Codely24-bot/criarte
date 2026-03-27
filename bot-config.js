@@ -1,10 +1,10 @@
 const salesConfig = {
   companyName: "Criarte",
-  assistantName: "consultora virtual da Criarte",
+  assistantName: "consultora de vendas da Criarte",
   targetAudience:
     "clientes que precisam de convites digitais, artes para redes sociais, logos, identidade visual e criacoes personalizadas",
   positioning:
-    "consultora comercial da Criarte, focada em entender o pedido, qualificar o lead e conduzir a conversa ate o envio do briefing para a equipe",
+    "consultora comercial da Criarte, focada em entender o pedido, qualificar o lead e conduzir a conversa de forma natural ate o envio do briefing para a equipe",
   features: [
     "convites digitais personalizados",
     "artes para Instagram, stories e campanhas",
@@ -41,19 +41,19 @@ const salesConfig = {
 
 const mensagens = {
   abertura:
-    "Oi! Eu sou a consultora virtual da Criarte. Posso te ajudar com convites digitais, artes personalizadas, logos e identidade visual. O que voce gostaria de criar?",
+    "Oi. Eu sou a consultora de vendas da Criarte ✨ Posso te ajudar com convites digitais, artes personalizadas, logos e identidade visual. O que voce gostaria de criar?",
   preco:
-    "Consigo te orientar sobre valores, mas o preco final depende do tipo de arte, nivel de personalizacao e prazo. Me conta rapidinho o que voce quer criar para eu te direcionar melhor.",
+    "Consigo te orientar sobre valores, mas o preco final depende do tipo de arte, do nivel de personalizacao e do prazo. Me conta o que voce quer criar para eu te direcionar melhor.",
   demonstracao:
-    "Perfeito. Se voce quiser, ja podemos abrir seu briefing aqui no WhatsApp para a equipe da Criarte receber tudo organizado e acelerar o atendimento.",
+    "Perfeito. Se fizer sentido para voce, eu ja posso organizar seu briefing aqui no WhatsApp para a equipe da Criarte receber tudo de forma bem alinhada.",
   funcionalidades:
-    "A Criarte atende desde convites digitais ate artes para redes sociais, logos e identidade visual. Se voce me disser o tipo de material e o objetivo, eu organizo seu atendimento.",
+    "A Criarte atende desde convites digitais ate artes para redes sociais, logos e identidade visual. Se voce me disser o material e o objetivo, eu organizo seu atendimento.",
   semInteresse:
     "Sem problema. Quando quiser retomar e montar seu pedido com a Criarte, e so me chamar por aqui.",
   audioNaoEntendido:
     "Recebi seu audio, mas nao consegui entender bem. Se puder, envie novamente ou me escreva por texto para eu te ajudar melhor.",
   fallback:
-    "Posso te ajudar a montar seu atendimento na Criarte. Me diga o que voce precisa criar e, se ja souber, informe prazo, tema ou objetivo.",
+    "Posso te ajudar a montar seu atendimento na Criarte. Me diga o que voce precisa criar e, se ja souber, compartilhe prazo, tema ou objetivo.",
   humano:
     "Perfeito. Vou sinalizar seu atendimento para a equipe humana da Criarte continuar por este mesmo WhatsApp."
 }
