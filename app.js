@@ -8,7 +8,15 @@ const SERVER_ORIGIN_CANDIDATES = Array.from(
   new Set([window.location.origin, "http://localhost:3000", "http://127.0.0.1:3000"])
 )
 
-const SERVICE_OPTIONS = ["Convite digital", "Arte para Instagram", "Arte personalizada", "Logotipo", "Identidade visual"]
+const SERVICE_OPTIONS = [
+  "Convite digital",
+  "Mascotinho personalizado",
+  "Arte para redes sociais",
+  "Arte para Instagram",
+  "Arte personalizada",
+  "Logotipo",
+  "Identidade visual"
+]
 const PAYMENT_METHOD_OPTIONS = ["A definir", "PIX", "Cartao", "Boleto", "Dinheiro", "Transferencia"]
 const PAYMENT_STATUS_OPTIONS = ["Pago", "50% pago", "Pendente"]
 const ORDER_STATUS_OPTIONS = ["Novo lead", "Aguardando pagamento", "Em criacao", "Em aprovacao", "Finalizado", "Entregue"]

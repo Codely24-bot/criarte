@@ -41,8 +41,15 @@ const SERVICE_OFFERS = {
     keywords: ["convite", "convites", "digital", "aniversario", "casamento", "cha", "chá", "festa"],
     pitch: "Ideal para quem quer um convite bonito, organizado e com cara profissional para enviar pelo WhatsApp e redes sociais."
   },
+  mascotinho: {
+    name: "Mascotinho personalizado",
+    emoji: "🧸",
+    price: 47.5,
+    keywords: ["mascotinho", "mascote", "mascot", "personagem", "bonequinho"],
+    pitch: "Uma arte exclusiva que ajuda a deixar a festa mais encantadora, padronizada e com identidade propria."
+  },
   instagram: {
-    name: "Arte para Instagram",
+    name: "Arte para redes sociais",
     emoji: "📱",
     price: 35,
     keywords: ["instagram", "post", "story", "stories", "rede social", "redes sociais"],
@@ -202,6 +209,12 @@ const humanTriggers = ["atendente", "humano", "pessoa", "suporte"]
 const stopTriggers = ["parar", "sair", "nao quero", "sem interesse", "nao tenho interesse"]
 const priceTriggers = ["preco", "precos", "valor", "valores", "quanto custa", "investimento"]
 const serviceTriggers = ["servico", "servicos", "catalogo", "portfolio", "convite", "arte", "logo", "identidade"]
+const inviteTriggers = ["convite", "convites", "aniversario", "festa", "casamento", "cha", "chá"]
+const mascotTriggers = ["mascotinho", "mascote", "mascot", "personagem", "bonequinho"]
+const socialArtTriggers = ["rede social", "redes sociais", "instagram", "post", "posts", "banner", "story", "stories"]
+const thinkingTriggers = ["vou pensar", "deixa eu pensar", "vou ver", "depois eu vejo", "depois eu chamo"]
+const expensiveTriggers = ["ta caro", "tá caro", "muito caro", "achei caro"]
+const paymentInfoTriggers = ["pix", "pagamento", "pagar", "chave pix"]
 const greetingTriggers = /^(oi|ola|bom dia|boa tarde|boa noite|opa)$/i
 const collectingStages = new Set([
   "collect_name",
@@ -538,11 +551,23 @@ const sendTyping = async (chat) => {
   await delay(1200)
 }
 
-const buildFallbackSalesReply = (text, leadName) => {
+const buildFallbackSalesReply = (text, leadName, isFirstContact = false) => {
   let reply = mensagens.fallback
 
   if (stopTriggers.some((item) => text.includes(item))) {
     reply = mensagens.semInteresse
+  } else if (thinkingTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.objecaoPensar
+  } else if (expensiveTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.objecaoPreco
+  } else if (paymentInfoTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.pagamento
+  } else if (mascotTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.mascotinho
+  } else if (inviteTriggers.some((item) => text.includes(item))) {
+    reply = `${mensagens.convite}\n\n${mensagens.upsellConvite}`
+  } else if (socialArtTriggers.some((item) => text.includes(item))) {
+    reply = mensagens.redesSociais
   } else if (priceTriggers.some((item) => text.includes(item))) {
     reply = mensagens.preco
   } else if (serviceTriggers.some((item) => text.includes(item))) {
@@ -551,7 +576,10 @@ const buildFallbackSalesReply = (text, leadName) => {
     reply = mensagens.abertura
   }
 
-  return applyLeadNameToReply(reply, leadName)
+  const shouldPrependOpening = isFirstContact && reply !== mensagens.abertura
+  const finalReply = shouldPrependOpening ? `${mensagens.abertura}\n\n${reply}` : reply
+
+  return applyLeadNameToReply(finalReply, leadName)
 }
 
 const respondToLead = async ({ chat, incomingMessage, text, patch = {} }) => {
@@ -1196,7 +1224,10 @@ const handleIncomingWhatsAppMessage = async (msg) => {
     return
   }
 
-  const replyText = applyLeadNameToReply(aiReply?.reply || buildFallbackSalesReply(text, session.leadName), session.leadName)
+  const replyText = applyLeadNameToReply(
+    aiReply?.reply || buildFallbackSalesReply(text, session.leadName, session.history.length <= 1),
+    session.leadName
+  )
 
   await replyAndTrack({
     chat,
